@@ -6,7 +6,7 @@ export async function POST(request: NextRequest) {
   redirectUrl.pathname = "/login";
   redirectUrl.search = "";
 
-  const response = NextResponse.redirect(redirectUrl);
+  const response = NextResponse.redirect(redirectUrl, { status: 303 });
 
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
