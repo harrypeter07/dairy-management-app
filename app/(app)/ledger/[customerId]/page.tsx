@@ -40,7 +40,8 @@ const LedgerPage = () => {
     openingBalance: 0,
     periodSales: 0,
     periodPaid: 0,
-    periodNet: 0,
+    periodNetChange: 0,
+    periodClosingBalance: 0,
   });
   const [loading, setLoading] = useState(true);
   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
@@ -76,7 +77,8 @@ const LedgerPage = () => {
           openingBalance: 0,
           periodSales: 0,
           periodPaid: 0,
-          periodNet: 0,
+          periodNetChange: 0,
+          periodClosingBalance: 0,
         });
         return;
       }
@@ -116,7 +118,8 @@ const LedgerPage = () => {
           openingBalance: 0,
           periodSales: 0,
           periodPaid: 0,
-          periodNet: 0,
+          periodNetChange: 0,
+          periodClosingBalance: 0,
         });
         return;
       }
@@ -150,7 +153,12 @@ const LedgerPage = () => {
         id: t.id,
         type: "transaction" as const,
         date: t.date,
-        description: `Payment (${t.type})`,
+        description:
+          t.type === "advance"
+            ? "Advance"
+            : t.type === "adjustment"
+              ? "Adjustment"
+              : "Payment",
         debit: 0,
         credit: Number(t.amount),
         original_item: t as unknown as Record<string, unknown>,
@@ -185,7 +193,8 @@ const LedgerPage = () => {
         periodPaid += item.credit;
       }
     }
-    const periodNet = openingBalance + periodSales - periodPaid;
+    const periodNetChange = periodSales - periodPaid;
+    const periodClosingBalance = openingBalance + periodNetChange;
 
       setLedgerItems(processedItems);
       setSummary({
@@ -195,7 +204,8 @@ const LedgerPage = () => {
         openingBalance,
         periodSales,
         periodPaid,
-        periodNet,
+        periodNetChange,
+        periodClosingBalance,
       });
     } catch (e) {
       console.error(e);
@@ -208,7 +218,8 @@ const LedgerPage = () => {
         openingBalance: 0,
         periodSales: 0,
         periodPaid: 0,
-        periodNet: 0,
+        periodNetChange: 0,
+        periodClosingBalance: 0,
       });
     } finally {
       setLoading(false);
@@ -327,10 +338,15 @@ const LedgerPage = () => {
         <Card title="Net Payable (This Month)">
           <p
             className={`text-2xl font-semibold ${
-              summary.periodNet > 0 ? "text-destructive" : "text-emerald-700"
+              summary.periodClosingBalance > 0 ? "text-destructive" : "text-emerald-700"
             }`}
           >
-            ₹{Math.abs(summary.periodNet).toFixed(2)}
+            ₹{Math.abs(summary.periodClosingBalance).toFixed(2)}
+          </p>
+          <p className="text-xs text-muted-foreground mt-1">
+            {lang === "hi"
+              ? "पिछला बैलेंस + इस महीने की बिक्री - भुगतान"
+              : "Previous balance + this month sales - paid"}
           </p>
         </Card>
       </div>

@@ -1,85 +1,69 @@
-# Dairy Management Web App
+# Dairy Management App (Next.js + Supabase)
 
-## Overview
-The Dairy Management Web App is a full-stack application designed to help dairy owners manage their business efficiently. It allows users to track customers, daily milk and ghee deliveries, payments, and generate analytics reports. The app is built using Next.js with a mobile-friendly design and is ready to be a Progressive Web App (PWA).
+Full‑stack dairy management web app built with **Next.js App Router** and **Supabase (Postgres)**.
 
-## Features
-- **Customer Management**: Add, edit, and delete customer records.
-- **Daily Entry Screen**: Quickly input milk and ghee delivery entries for multiple customers.
-- **Transaction Management**: Record payments, advances, and adjustments with various payment modes.
-- **Ledger View**: View detailed entries and transactions for each customer along with their running balance.
-- **Monthly Billing**: Generate billing summaries for selected months.
-- **Analytics Dashboard**: Visualize sales trends, outstanding balances, and top customers with charts and tables.
-- **Language Toggle**: Switch between English and Hindi for user interface elements.
-- **PWA Features**: Installable on mobile devices with a responsive design.
+## What you can do
+- **Customers**: create/edit customers and take payments/advances
+- **Entries**: record daily sales (milk/ghee etc.) with date + shift + qty + rate
+- **Ledger**: view a customer timeline of sales + payments with a running balance
+- **Billing**: generate a bill for a customer for a date range and optionally upload/share the PDF
+- **Settings**: maintain your dairy/business profile (appears on bills)
+- **Analytics**: dashboard totals for a date range
 
-## Project Structure
-```
-dairy-management-app
-├── app
-│   ├── (pages)
-│   │   ├── dashboard
-│   │   ├── customers
-│   │   ├── entries
-│   │   ├── ledger
-│   │   └── analytics
-│   ├── api
-│   ├── layout.tsx
-│   └── page.tsx
-├── components
-│   ├── forms
-│   ├── ledger
-│   ├── analytics
-│   ├── ui
-│   └── layout
-├── lib
-│   ├── supabaseClient.ts
-│   ├── db
-│   ├── i18n
-│   ├── utils
-│   └── pwa
-├── public
-├── prisma
-├── styles
-├── supabase
-├── next.config.mjs
-├── package.json
-├── tailwind.config.ts
-├── postcss.config.mjs
-└── tsconfig.json
+## Tech stack
+- **Next.js** (App Router)
+- **Supabase**: database + auth + storage
+- **Tailwind CSS**
+
+## Setup
+
+### 1) Install dependencies
+```bash
+npm install
 ```
 
-## Getting Started
-1. **Clone the Repository**: 
-   ```
-   git clone <repository-url>
-   cd dairy-management-app
-   ```
+### 2) Environment variables
+Create `.env` with:
+- `NEXT_PUBLIC_SUPABASE_URL`
+- `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+- `NEXT_PUBLIC_BILLS_BUCKET` (optional, defaults to `bills`)
 
-2. **Install Dependencies**: 
-   ```
-   npm install
-   ```
+### 3) Database schema (Supabase SQL)
+Run migrations in `scripts/` in order:
+- `scripts/2026040501_initial_core_tables.sql`
+- `scripts/2026040502_dairy_profile_bill_shares.sql`
+- `scripts/2026040503_rls_and_storage.sql`
+- `scripts/2026040504_relax_products_name.sql`
+- `scripts/2026040701_unique_customer_phone.sql`
 
-3. **Set Up Supabase**: 
-   - Create a Supabase project and configure the database schema as defined in `supabase/schema.sql`.
-   - Update the Supabase client configuration in `lib/supabaseClient.ts`.
+### 4) Run locally
+```bash
+npm run dev
+```
+Open `http://localhost:3000`.
 
-4. **Run the Application**: 
-   ```
-   npm run dev
-   ```
+## Ledger & balance logic (important)
 
-5. **Access the App**: Open your browser and navigate to `http://localhost:3000`.
+We model two money flows for a customer:
+- **Sales** come from `entries.total_amount` (debit)
+- **Payments/advances/adjustments** come from `transactions.amount` (credit)
 
-## Technologies Used
-- **Frontend**: Next.js, React, Tailwind CSS
-- **Backend**: Supabase (PostgreSQL)
-- **State Management**: React Context API
-- **Deployment**: Vercel (recommended for Next.js apps)
+Balance is computed as:
+\[
+\text{balance} = \text{totalSales} - \text{totalPaid}
+\]
 
-## Contributing
-Contributions are welcome! Please open an issue or submit a pull request for any enhancements or bug fixes.
+In the Ledger UI:
+- **Previous Balance**: balance *before* the 1st day of the current month
+- **This Month Sales**: sum of entry totals within the current month
+- **This Month Paid/Advance**: sum of transaction amounts within the current month
+- **Net Payable (This Month)**: `previousBalance + thisMonthSales - thisMonthPaid`
 
-## License
-This project is licensed under the MIT License. See the LICENSE file for details.
+Positive means **customer owes you**; negative means **you owe/hold advance** for the customer.
+
+## Useful scripts
+Create users (for local/testing):
+```bash
+npm run create-user demo@gmail.com 123456
+npm run create-demo-user
+```

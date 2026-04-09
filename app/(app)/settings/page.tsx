@@ -86,6 +86,61 @@ export default function SettingsPage() {
           {loadError}
         </p>
       )}
+      <Card title={lang === "hi" ? "वर्तमान प्रोफ़ाइल" : "Current profile"}>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-start">
+          <div className="md:col-span-2 space-y-2">
+            <div>
+              <p className="text-xs text-muted-foreground">
+                {lang === "hi" ? "डेयरी नाम" : "Dairy name"}
+              </p>
+              <p className="font-semibold">{dairy_name || "—"}</p>
+            </div>
+            <div>
+              <p className="text-xs text-muted-foreground">
+                {lang === "hi" ? "टैगलाइन" : "Tagline"}
+              </p>
+              <p className="text-sm">{tagline || "—"}</p>
+            </div>
+            <div>
+              <p className="text-xs text-muted-foreground">
+                {lang === "hi" ? "पता" : "Address"}
+              </p>
+              <p className="text-sm whitespace-pre-wrap">{address || "—"}</p>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div>
+                <p className="text-xs text-muted-foreground">
+                  {lang === "hi" ? "फोन" : "Phone"}
+                </p>
+                <p className="text-sm">{phone || "—"}</p>
+              </div>
+              <div>
+                <p className="text-xs text-muted-foreground">
+                  {lang === "hi" ? "GST / टैक्स ID" : "GST / Tax ID"}
+                </p>
+                <p className="text-sm">{gst || "—"}</p>
+              </div>
+            </div>
+          </div>
+          <div className="md:col-span-1">
+            <p className="text-xs text-muted-foreground mb-1">
+              {lang === "hi" ? "लोगो" : "Logo"}
+            </p>
+            {logo_url ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={logo_url}
+                alt="Logo"
+                className="w-full max-w-[220px] rounded-md border border-border bg-white object-contain"
+              />
+            ) : (
+              <div className="w-full max-w-[220px] h-[120px] rounded-md border border-border bg-secondary/30 flex items-center justify-center text-xs text-muted-foreground">
+                {lang === "hi" ? "कोई लोगो नहीं" : "No logo"}
+              </div>
+            )}
+          </div>
+        </div>
+      </Card>
       <Card title={lang === "hi" ? "व्यवसाय प्रोफ़ाइल" : "Business profile"}>
         <form onSubmit={handleSubmit} className="space-y-4">
           <Input

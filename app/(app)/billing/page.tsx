@@ -2,13 +2,13 @@
 
 import React, { useState, useEffect, useMemo } from "react";
 import { supabaseClient } from "@/lib/supabaseClient";
-import Select from "@/components/ui/Select";
 import Input from "@/components/ui/Input";
 import Button from "@/components/ui/Button";
 import Card from "@/components/ui/Card";
 import BillStatement, { type BillLine } from "@/components/bills/BillStatement";
 import { withTimeout } from "@/lib/withTimeout";
 import { useI18n } from "@/components/i18n/LanguageProvider";
+import Combobox from "@/components/ui/Combobox";
 
 const FETCH_MS = 18_000;
 
@@ -29,7 +29,6 @@ interface DairyProfile {
 const BillingPage = () => {
   const { t, lang } = useI18n();
   const [customers, setCustomers] = useState<Customer[]>([]);
-  const [customerQuery, setCustomerQuery] = useState("");
   const [selectedCustomer, setSelectedCustomer] = useState("");
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
@@ -83,16 +82,11 @@ const BillingPage = () => {
     [customers, selectedCustomer]
   );
   const bucketName = process.env.NEXT_PUBLIC_BILLS_BUCKET || "bills";
-  const customerOptions = customers
-    .filter((c) => {
-      const q = customerQuery.trim().toLowerCase();
-      if (!q) return true;
-      return (
-        c.name.toLowerCase().includes(q) ||
-        (c.phone || "").toLowerCase().includes(q)
-      );
-    })
-    .map((c) => ({ value: c.id, label: c.phone ? `${c.name} (${c.phone})` : c.name }));
+  const customerOptions = customers.map((c) => ({
+    value: c.id,
+    label: c.phone ? `${c.name} (${c.phone})` : c.name,
+    keywords: `${c.name} ${c.phone ?? ""}`,
+  }));
 
   const handleGenerateBill = async () => {
     if (!selectedCustomer || !startDate || !endDate) {
@@ -232,6 +226,38 @@ const BillingPage = () => {
   return (
     <div className="space-y-6">
       <h1 className="text-3xl font-bold text-foreground">{t("billing.title")}</h1>
+      {lines.length > 0 && customerName ? (
+        <div className="rounded-xl border border-border bg-white/90 px-4 py-3">
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-2">
+            <div>
+              <p className="text-xs text-muted-foreground">
+                {lang === "hi" ? "ग्राहक" : "Customer"}
+              </p>
+              <p className="font-semibold">{customerName}</p>
+            </div>
+            <div>
+              <p className="text-xs text-muted-foreground">
+                {lang === "hi" ? "अवधि" : "Period"}
+              </p>
+              <p className="text-sm">{periodLabel}</p>
+            </div>
+            <div className="grid grid-cols-2 gap-x-6 gap-y-1 md:text-right">
+              <div>
+                <p className="text-[11px] text-muted-foreground">
+                  {lang === "hi" ? "पहले का बैलेंस" : "Opening"}
+                </p>
+                <p className="text-sm font-medium">₹{totals.openingBalance.toFixed(2)}</p>
+              </div>
+              <div>
+                <p className="text-[11px] text-muted-foreground">
+                  {lang === "hi" ? "अंतिम बैलेंस" : "Final"}
+                </p>
+                <p className="text-sm font-semibold">₹{totals.finalBalance.toFixed(2)}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      ) : null}
       {uiError && (
         <p className="text-sm text-destructive bg-destructive/10 rounded-md px-3 py-2">
           {uiError}
@@ -254,14 +280,7 @@ const BillingPage = () => {
           </p>
         ) : null}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4 items-end print:hidden">
-          <Input
-            label={lang === "hi" ? "ग्राहक खोजें" : "Search customer"}
-            id="customer-search"
-            value={customerQuery}
-            onChange={(e) => setCustomerQuery(e.target.value)}
-            placeholder="Name or phone"
-          />
-          <Select
+          <Combobox
             label={lang === "hi" ? "ग्राहक" : "Customer"}
             value={selectedCustomer}
             onChange={setSelectedCustomer}
